@@ -18,7 +18,9 @@ include_directories(src)
 # Create the executable from main.cpp
 add_executable(Helenalizer src/main.cpp
         src/AudioProcessing.cpp
-        src/AudioProcessing.h)
+        src/AudioProcessing.h
+        src/VisualizerRecorder.cpp
+        src/VisualizerRecorder.h)
 
 # Link the executable to the SFML libraries
 target_link_libraries(Helenalizer

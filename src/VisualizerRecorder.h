@@ -4,19 +4,32 @@
 
 #ifndef HELENALIZER_VISUALIZERRECORDER_H
 #define HELENALIZER_VISUALIZERRECORDER_H
+
 #include <mutex>
 #include <SFML/Audio/SoundRecorder.hpp>
+#include <vector>
+#include "../libs/miniaudio.h"
 
-
-class VisualizerRecorder : public sf::SoundRecorder{
+class VisualizerRecorder {
 public:
-    std::vector<int16_t> getAudioData();
-protected:
-    bool onProcessSamples(const std::int16_t *samples, std::size_t sampleCount) override;
+    VisualizerRecorder();
+    ~VisualizerRecorder();
+
+    // Controls
+    void start();
+    void stop();
+
+    // Safe way to get audio data from the main loop
+    std::vector<float> getAudioData();
 
 private:
-    std::vector<int16_t> audioBuffer;
-    std::mutex myMutex;
+    ma_device device  =  {};
+    std::vector<float> audioBuffer;
+    std::mutex bufferMutex;
+
+
+    // The static callback function required by miniaudio
+    static void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount);
 };
 
 

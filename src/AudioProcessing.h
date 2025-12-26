@@ -12,13 +12,15 @@
 
 class AudioProcessing {
     public:
-        bool setListeningDevice();
-        void getListeningDevices();
+        // bool setListeningDevice();
+        // void getListeningDevices();
         void testRecording();
 
         void startRecording();
 
         void stopRecording();
+
+        std::vector<float> getAudioData();
 
     private:
         std::vector<std::string> listeningDevices;

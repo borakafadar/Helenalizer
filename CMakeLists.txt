@@ -20,7 +20,13 @@ add_executable(Helenalizer src/main.cpp
         src/AudioProcessing.cpp
         src/AudioProcessing.h
         src/VisualizerRecorder.cpp
-        src/VisualizerRecorder.h)
+        src/VisualizerRecorder.h
+        libs/miniaudio.h
+        libs/miniaudio_impl.cpp
+        src/SimpleFFT.cpp
+        src/SimpleFFT.h
+        src/DrawObjects.cpp
+        src/DrawObjects.h)
 
 # Link the executable to the SFML libraries
 target_link_libraries(Helenalizer
@@ -42,3 +48,6 @@ add_custom_command(TARGET Helenalizer POST_BUILD
         $<TARGET_FILE_DIR:Helenalizer>
         COMMENT "Copying SFML DLLs to build directory..."
 )
+
+# Copy the "assets" folder from your Source Code -> Build Folder
+file(COPY ${CMAKE_SOURCE_DIR}/src/assets DESTINATION ${CMAKE_BINARY_DIR})

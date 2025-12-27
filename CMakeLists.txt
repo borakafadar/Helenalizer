@@ -26,7 +26,11 @@ add_executable(Helenalizer src/main.cpp
         src/SimpleFFT.cpp
         src/SimpleFFT.h
         src/DrawObjects.cpp
-        src/DrawObjects.h)
+        src/DrawObjects.h
+        src/GUI/GUI.cpp
+        src/GUI/GUI.h
+        src/GUI/Button.cpp
+        src/GUI/Button.h)
 
 # Link the executable to the SFML libraries
 target_link_libraries(Helenalizer

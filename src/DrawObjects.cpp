@@ -14,9 +14,9 @@ sf::VertexArray DrawObjects::getAudioLine(std::vector<float> &audio, int windowS
 
 
     float centerY = windowSizeY / 2.0f;
-    for (int i = 0; i < audio.size(); i++) {
-        float x = (static_cast<float>(i) / audio.size()) * windowSizeX;
-        float height = audio[i] * 100.0f;
+    for (int i = 0; i < audio.size(); i+=1) {
+        float x = (static_cast<float>(i) / audio.size()) * static_cast<float>(windowSizeX);
+        float height = audio[i] * 250.0f;
         sf::Vertex topPoint;
         topPoint.position = sf::Vector2f(x,centerY - height);
         topPoint.color = sf::Color::White;

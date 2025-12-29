@@ -1,5 +1,7 @@
 #include "Button.h"
 
+#include <iostream>
+
 Button::Button(float x, float y, float width, float height, const std::string& text, const sf::Font& font) : content(font,text,30) {
     // 1. Setup the Box (Shape)
     shape.setPosition({x, y});

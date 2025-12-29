@@ -16,6 +16,7 @@ constexpr int WINDOW_Y = 1080;
 
 GUI::GUI() {
     renderWindow = nullptr;
+    currentState = AppState::Visualizer;
 }
 
 GUI::~GUI() {
@@ -26,9 +27,9 @@ GUI::~GUI() {
 
 void GUI::setRenderWindow() {
     if (renderWindow == nullptr) {
-        currentState = AppState::Visualizer;
+        currentState = AppState::Menu;
         renderWindow = new sf::RenderWindow(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Helenalizer");
-        renderWindow->setFramerateLimit(60); 
+        renderWindow->setFramerateLimit(60);
 
         sf::Image icon;
         if (icon.loadFromFile("assets/wtfisthisphoto.png")) {
@@ -75,15 +76,17 @@ void GUI::run() {
     float btnHeight = 80.f;
 
     sf::FloatRect textPausedBounds = text.getLocalBounds();
-    text.setPosition({(renderWindow->getSize().x - textPausedBounds.size.x)/2,static_cast<float>(renderWindow->getSize().y/100*3)});
+    text.setPosition({(renderWindow->getSize().x - textPausedBounds.size.x)/2,static_cast<float>(renderWindow->getSize().y/100*5)});
     std::string fullscreenText("Toggle Fullscreen");
-    Button fullscreenButton((renderWindow->getSize().x - textPausedBounds.size.x)/2,static_cast<float>((renderWindow->getSize().y/100)*4.5f),btnWidth,btnHeight,"Toggle Fullscreen",font);
+    Button fullscreenButton((renderWindow->getSize().x - textPausedBounds.size.x)/2,static_cast<float>((renderWindow->getSize().y/100)*25.0f),btnWidth,btnHeight,"Toggle Fullscreen",font);
 
 
     AudioProcessing ap;
     ap.startRecording();
 
     DrawObjects dob;
+
+    bool fullscreenMode = false;
 
     while (renderWindow->isOpen()) {
 
@@ -104,6 +107,10 @@ void GUI::run() {
             }
         }
 
+        sf::Vector2i pixelPos = sf::Mouse::getPosition(*renderWindow);
+        sf::Vector2f mousePos = renderWindow -> mapPixelToCoords(pixelPos);
+        bool isClicking = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+
         if (currentState == AppState::Visualizer) {
             std::vector<float> audioData = ap.getAudioData();
 
@@ -115,9 +122,20 @@ void GUI::run() {
                 renderWindow->draw(vertexArray);
             }
         } else if (currentState == AppState::Menu) {
-
             renderWindow->draw(text);
             fullscreenButton.draw(*renderWindow);
+            fullscreenButton.update(mousePos);
+            bool fullscreenButtonClicked = fullscreenButton.isPressed(mousePos,isClicking);
+            if (fullscreenButtonClicked) {
+                renderWindow -> close();
+                fullscreenMode = !fullscreenMode;
+                if (fullscreenMode) {
+                    renderWindow -> create(sf::VideoMode({WINDOW_X,WINDOW_Y}),"Helenalizer",sf::Style::Default,sf::State::Fullscreen);
+
+                } else {
+                    renderWindow -> create(sf::VideoMode({WINDOW_X,WINDOW_Y}),"Helenalizer",sf::Style::Default,sf::State::Windowed);
+                }
+            }
         }
 
 

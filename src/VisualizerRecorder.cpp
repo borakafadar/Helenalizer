@@ -25,7 +25,9 @@ VisualizerRecorder::VisualizerRecorder() {
 }
 
 VisualizerRecorder::~VisualizerRecorder() {
-    ma_device_uninit(&device);
+    ma_device_stop(&device); // 1. HARD stop audio thread
+    device.pUserData = nullptr; // 2. Make callback harmless
+    ma_device_uninit(&device); // 3. Now safe to destroy
 }
 
 void VisualizerRecorder::start() {
@@ -44,12 +46,12 @@ std::vector<float> VisualizerRecorder::getAudioData() {
 }
 
 // === THE BACKGROUND THREAD WORKER ===
-void VisualizerRecorder::data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
+void VisualizerRecorder::data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount) {
     // Recover the pointer to our class instance
-    VisualizerRecorder* recorder = (VisualizerRecorder*)pDevice->pUserData;
+    VisualizerRecorder *recorder = (VisualizerRecorder *) pDevice->pUserData;
 
     // Cast raw bytes to float (because we asked for ma_format_f32)
-    const float* samples = (const float*)pInput;
+    const float *samples = (const float *) pInput;
 
     if (recorder && samples) {
         // Lock to prevent Main Loop from reading while we write

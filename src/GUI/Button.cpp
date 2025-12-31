@@ -63,3 +63,24 @@ bool Button::isPressed(sf::Vector2f mousePos, bool isMousePressed) {
     }
     return false;
 }
+
+void Button::setPosition(float x, float y) {
+    shape.setPosition({x, y});
+
+    // Re-calculate the center for the text
+    sf::FloatRect textBounds = content.getLocalBounds();
+    sf::Vector2f size = shape.getSize();
+
+    content.setPosition({
+        x + size.x / 2.0f,
+        y + size.y / 2.0f
+    });
+}
+
+sf::Vector2f Button::getPosition() const {
+    return shape.getPosition();
+}
+
+sf::Vector2f Button::getSize() const {
+    return shape.getSize();
+}

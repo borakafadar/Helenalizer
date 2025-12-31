@@ -26,6 +26,7 @@ public:
 private:
     sf::RenderWindow* renderWindow;
     AppState currentState;
+    sf::ContextSettings contextSettings;
 };
 
 

@@ -3,6 +3,10 @@
 #include <vector>
 #include <optional>
 #include <SFML/Graphics.hpp>
+#include <TGUI/Widgets/ListBox.hpp>
+#include <TGUI/Backend/SFML-Graphics.hpp>
+#include <TGUI/AllWidgets.hpp>
+#include <TGUI/Core.hpp>
 
 
 #include "Button.h"
@@ -10,8 +14,8 @@
 #include "../DrawObjects.h"
 
 
-constexpr int WINDOW_X = 1920;
-constexpr int WINDOW_Y = 1080;
+constexpr int DEFAULT_WINDOW_X = 1920;
+constexpr int DEFAULT_WINDOW_Y = 1080;
 
 
 GUI::GUI() {
@@ -27,9 +31,13 @@ GUI::~GUI() {
 
 void GUI::setRenderWindow() {
     if (renderWindow == nullptr) {
-        currentState = AppState::Menu;
-        renderWindow = new sf::RenderWindow(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Helenalizer");
-        renderWindow->setFramerateLimit(60);
+        currentState = AppState::Visualizer;
+        contextSettings.antiAliasingLevel = 16;
+        renderWindow = new sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_X, DEFAULT_WINDOW_Y}), "Helenalizer");
+        renderWindow->setFramerateLimit(144);
+
+
+
 
         sf::Image icon;
         if (icon.loadFromFile("assets/wtfisthisphoto.png")) {
@@ -47,9 +55,11 @@ void GUI::run() {
 
     setRenderWindow();
 
+    DrawObjects dob;
+
     sf::Texture tex;
 
-    if (!tex.resize({WINDOW_X, WINDOW_Y})) {
+    if (!tex.resize({DEFAULT_WINDOW_X, DEFAULT_WINDOW_Y})) {
         std::cerr << "Failed to resize the texture!" <<std::endl;
     }
     
@@ -72,6 +82,106 @@ void GUI::run() {
     text.setString("Paused");
     text.setCharacterSize(100);
 
+    tgui::Gui menuGui(*renderWindow);
+
+    auto topColorListBox = tgui::ListBox::create();
+    std::vector<tgui::String> colors = {"White","Blue","Cyan","Red"};
+    topColorListBox->addMultipleItems(colors);
+    //topColorListBox->setPosition("50% - width/2", "40%");
+
+    topColorListBox->setSelectedItem("White");
+
+    topColorListBox->onItemSelect([&dob](const tgui::String& item) {
+        sf::Color selectedColor;
+        if (item == "White") {
+            selectedColor = sf::Color::White;
+        } else if (item == "Blue") {
+            selectedColor = sf::Color::Blue;
+        } else if (item == "Cyan") {
+            selectedColor = sf::Color::Cyan;
+        } else if (item == "Red") {
+            selectedColor = sf::Color::Red;
+        }
+        dob.setTopColor(selectedColor);
+    });
+
+    auto topColorLabel = tgui::Label::create("Top Color");
+    topColorLabel->getRenderer()->setTextColor(sf::Color::White);
+    topColorLabel->setTextSize(20);
+
+    auto topColorLayout = tgui::VerticalLayout::create();
+
+    topColorLayout->add(topColorLabel);
+    topColorLayout->add(topColorListBox);
+    topColorLayout->setPosition("50% - width/2","40%");
+    topColorLayout->setSize(150,200);
+
+    auto bottomColorListBox = tgui::ListBox::create();
+    bottomColorListBox->addMultipleItems(colors);
+    bottomColorListBox->setSelectedItem("Cyan");
+
+    bottomColorListBox->onItemSelect([&dob](const tgui::String& item) {
+        sf::Color selectedColor;
+        if (item == "White") {
+            selectedColor = sf::Color::White;
+        } else if (item == "Blue") {
+            selectedColor = sf::Color::Blue;
+        } else if (item == "Cyan") {
+            selectedColor = sf::Color::Cyan;
+        } else if (item == "Red") {
+            selectedColor = sf::Color::Red;
+        }
+        dob.setBottomColor(selectedColor);
+    });
+
+    auto bottomColorLabel = tgui::Label::create("Bottom Color");
+    bottomColorLabel->getRenderer()->setTextColor(sf::Color::White);
+    bottomColorLabel->setTextSize(20);
+
+    auto bottomColorLayout = tgui::VerticalLayout::create();
+
+    bottomColorLayout->add(bottomColorLabel);
+    bottomColorLayout->add(bottomColorListBox);
+    bottomColorLayout->setPosition("50% - width/2","40%");
+    bottomColorLayout->setSize(150,200);
+
+
+    auto colorsLayout = tgui::HorizontalLayout::create();
+    colorsLayout->add(topColorLayout);
+    colorsLayout->add(bottomColorLayout);
+
+    colorsLayout->setSize("20%","20%");
+    colorsLayout->setPosition("50% - width/2","40%");
+
+    auto exitButton = tgui::Button::create("Exit");
+
+    exitButton ->onPress([&menuGui]() {
+        auto messageBox = tgui::MessageBox::create();
+        messageBox->addButton("Yes");
+        messageBox->addButton("No");
+        messageBox->setButtonAlignment(tgui::HorizontalAlignment::Right);
+        messageBox->setTitle("Exit");
+        messageBox->setPosition("50% - width/2","40%");
+        messageBox->setText("Are you sure you want to exit?");
+        menuGui.add(messageBox);
+        messageBox->onButtonPress([msgBox=messageBox.get()](const tgui::String & button) {
+            assert(button == "Yes" || button == "No");
+            if (button == "Yes") {
+                std::exit(0);
+            } else if (button == "No") {
+                msgBox->getParent()->remove(msgBox->shared_from_this());
+            }
+        });
+
+
+        //std::exit(0);
+    });
+    exitButton -> setPosition("50% - width/2","90%");
+    exitButton ->setSize("10%","5%");
+    menuGui.add(colorsLayout);
+    menuGui.add(exitButton);
+
+
     float btnWidth = 300.f;
     float btnHeight = 80.f;
 
@@ -84,7 +194,6 @@ void GUI::run() {
     AudioProcessing ap;
     ap.startRecording();
 
-    DrawObjects dob;
 
     bool fullscreenMode = false;
 
@@ -93,6 +202,9 @@ void GUI::run() {
         renderWindow->clear();
 
         while (const std::optional event = renderWindow->pollEvent()) {
+            if (currentState == AppState::Menu) {
+                menuGui.handleEvent(*event);
+            }
             if (event->is<sf::Event::Closed>()) {
                 renderWindow->close();
             }
@@ -111,18 +223,28 @@ void GUI::run() {
         sf::Vector2f mousePos = renderWindow -> mapPixelToCoords(pixelPos);
         bool isClicking = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
+        float x = renderWindow->getView().getSize().x;
+        float y = renderWindow -> getView().getSize().y;
+
         if (currentState == AppState::Visualizer) {
             std::vector<float> audioData = ap.getAudioData();
 
             renderWindow->draw(spr);
 
 
-            if (audioData.size() >= 4096) {
-                sf::VertexArray vertexArray = dob.getAudioLine(audioData, WINDOW_X, WINDOW_Y);
+            if (audioData.size() >= 2048) {
+                sf::VertexArray vertexArray = dob.getAudioLine(audioData, x, y);
                 renderWindow->draw(vertexArray);
             }
         } else if (currentState == AppState::Menu) {
+            text.setPosition({(x - textPausedBounds.size.x) / 2.f, y / 100.f * 5.f});
+            fullscreenButton.setPosition((x - fullscreenButton.getSize().x) / 2.0f, y / 100.f * 25.0f);
+            // topColorListBox->setPosition("50% - width/2", "40%");
+            // topColorListBox->setSize("5%","5%");
+
+            menuGui.setWindow(*renderWindow);
             renderWindow->draw(text);
+            menuGui.draw();
             fullscreenButton.draw(*renderWindow);
             fullscreenButton.update(mousePos);
             bool fullscreenButtonClicked = fullscreenButton.isPressed(mousePos,isClicking);
@@ -130,10 +252,10 @@ void GUI::run() {
                 renderWindow -> close();
                 fullscreenMode = !fullscreenMode;
                 if (fullscreenMode) {
-                    renderWindow -> create(sf::VideoMode({WINDOW_X,WINDOW_Y}),"Helenalizer",sf::Style::Default,sf::State::Fullscreen);
-
+                    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+                    renderWindow -> create(sf::VideoMode({desktopMode.size.x,desktopMode.size.y}),"Helenalizer",sf::Style::Default,sf::State::Fullscreen,contextSettings);
                 } else {
-                    renderWindow -> create(sf::VideoMode({WINDOW_X,WINDOW_Y}),"Helenalizer",sf::Style::Default,sf::State::Windowed);
+                    renderWindow -> create(sf::VideoMode({DEFAULT_WINDOW_X,DEFAULT_WINDOW_Y}),"Helenalizer",sf::Style::Default,sf::State::Windowed,contextSettings);
                 }
             }
         }

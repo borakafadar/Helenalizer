@@ -4,13 +4,20 @@
 
 #ifndef HELENALIZER_DRAWOBJECTS_H
 #define HELENALIZER_DRAWOBJECTS_H
+#include <string>
 #include <SFML/Graphics/VertexArray.hpp>
 
 
 class DrawObjects {
 public:
     sf::VertexArray getAudioLine(std::vector<float> &audio, int windowSizeX, int windowSizeY);
+    void setTopColor(sf::Color newColor);
+    void setBottomColor(sf::Color newColor);
+    sf::Color getTopColor();
+    sf::Color getBottomColor();
 private:
+    sf::Color topColor = sf::Color::White;
+    sf::Color bottomColor = sf::Color::Cyan;
 };
 
 

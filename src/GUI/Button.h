@@ -22,6 +22,15 @@ public:
 
     // Checks if the button was actually clicked
     bool isPressed(sf::Vector2f mousePos, bool isMousePressed);
+    
+    // Updates the button's position
+    void setPosition(float x, float y);
+
+    // Gets the current position of the button
+    sf::Vector2f getPosition() const;
+
+    // Gets the current size of the button
+    sf::Vector2f getSize() const;
 
 private:
     sf::RectangleShape shape;

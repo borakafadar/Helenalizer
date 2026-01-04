@@ -12,6 +12,12 @@ enum class AppState {
     Menu
 };
 
+enum class VisualizerMode {
+    Double,
+    Single,
+    Circle
+};
+
 
 class GUI {
 public:
@@ -26,6 +32,7 @@ public:
 private:
     sf::RenderWindow* renderWindow;
     AppState currentState;
+    VisualizerMode visualizerMode;
     sf::ContextSettings contextSettings;
 };
 

@@ -14,6 +14,7 @@ class AudioProcessing {
     public:
         // bool setListeningDevice();
         // void getListeningDevices();
+        static constexpr int AUDIO_SIZE = 4096;
         void testRecording();
 
         void startRecording();

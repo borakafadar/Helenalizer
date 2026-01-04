@@ -8,37 +8,6 @@
 #include <SFML/Audio.hpp>
 #include "../libs/miniaudio.h"
 
-// bool AudioProcessing::setListeningDevice() {
-//     //TODO set processing with wasapi loopback
-//
-//     getListeningDevices();
-//     bool stereoMixFound = false;
-//     if (listeningDevices.empty()) {
-//         std::cout << "No devices are available!" <<std::endl;
-//         return false;
-//     }
-//
-//     for (int i = 0; i<listeningDevices.size();i++) {
-//         if (listeningDevices.at(i).find("Stereo Mix") != -1) {
-//             stereoMixFound = true;
-//             stereoMixDevice = listeningDevices.at(i);
-//         }
-//     }
-//
-//     if (stereoMixFound) {
-//         recorder.setDevice(stereoMixDevice);
-//     }
-//     return stereoMixFound;
-//
-// }
-//
-// void AudioProcessing::getListeningDevices() {
-//     listeningDevices = sf::SoundRecorder::getAvailableDevices();
-//     for (int i = 0; i<listeningDevices.size();i++) {
-//         std::cout << listeningDevices.at(i) << std::endl;
-//     }
-//
-// }
 
 void AudioProcessing::testRecording() {
     //std::cout << recorder.getDevice();
@@ -55,8 +24,8 @@ void AudioProcessing::stopRecording() {
 
 std::vector<float> AudioProcessing::getAudioData() {
     std::vector<float> audio = recorder.getAudioData();
-    if (audio.size()>=4096) {
-        audio.resize(4096);
+    if (audio.size()>=AUDIO_SIZE) {
+        audio.resize(AUDIO_SIZE);
         SimpleFFT::applyHannWindow(audio);
 
         SimpleFFT::computeAmplitudes(audio);

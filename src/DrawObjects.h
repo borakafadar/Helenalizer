@@ -10,7 +10,9 @@
 
 class DrawObjects {
 public:
-    sf::VertexArray getAudioLine(std::vector<float> &audio, int windowSizeX, int windowSizeY);
+    sf::VertexArray getDoubleAudioLine(std::vector<float> &audio, int windowSizeX, int windowSizeY);
+    sf::VertexArray getSingleAudioLine(std::vector<float> &audio, int windowSizeX, int windowSizeY);
+    sf::VertexArray getCircleAudioLine(std::vector<float> &audio, int windowSizeX, int windowSizeY);
     void setTopColor(sf::Color newColor);
     void setBottomColor(sf::Color newColor);
     sf::Color getTopColor();

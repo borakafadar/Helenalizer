@@ -21,6 +21,7 @@ constexpr int DEFAULT_WINDOW_Y = 1080;
 GUI::GUI() {
     renderWindow = nullptr;
     currentState = AppState::Visualizer;
+    visualizerMode = VisualizerMode::Double;
 }
 
 GUI::~GUI() {
@@ -32,6 +33,7 @@ GUI::~GUI() {
 void GUI::setRenderWindow() {
     if (renderWindow == nullptr) {
         currentState = AppState::Visualizer;
+        visualizerMode = VisualizerMode::Double;
         contextSettings.antiAliasingLevel = 16;
         renderWindow = new sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_X, DEFAULT_WINDOW_Y}), "Helenalizer");
         renderWindow->setFramerateLimit(144);
@@ -150,9 +152,6 @@ void GUI::run() {
     colorsLayout->add(topColorLayout);
     colorsLayout->add(bottomColorLayout);
 
-    colorsLayout->setSize("20%","20%");
-    colorsLayout->setPosition("50% - width/2","40%");
-
     auto exitButton = tgui::Button::create("Exit");
 
     exitButton ->onPress([&menuGui]() {
@@ -173,12 +172,43 @@ void GUI::run() {
             }
         });
 
-
-        //std::exit(0);
     });
     exitButton -> setPosition("50% - width/2","90%");
     exitButton ->setSize("10%","5%");
-    menuGui.add(colorsLayout);
+
+    auto visualizerModeLayout = tgui::VerticalLayout::create();
+    auto visualizerModeLabel = tgui::Label::create("Visualizer Mode");
+    visualizerModeLabel->getRenderer()->setTextColor(sf::Color::White);
+    visualizerModeLabel->setTextSize(20);
+
+    std::vector<tgui::String> modes = {"Double","Single", "Circle"};
+
+    auto visualizerModeListBox = tgui::ListBox::create();
+    visualizerModeListBox->addMultipleItems(modes);
+
+    visualizerModeListBox->setSelectedItem("Double");
+    visualizerModeListBox->onItemSelect([this](const tgui::String& item) {
+        if (item == "Double") {
+            visualizerMode=VisualizerMode::Double;
+        } else if (item == "Single") {
+            visualizerMode=VisualizerMode::Single;
+        } else if (item == "Circle") {
+            visualizerMode=VisualizerMode::Circle;
+        }
+    });
+
+    visualizerModeLayout->add(visualizerModeLabel);
+    visualizerModeLayout->add(visualizerModeListBox);
+
+    auto menuLayout = tgui::VerticalLayout::create();
+    menuLayout->add(colorsLayout);
+    menuLayout->add(visualizerModeLayout);
+
+    menuLayout->setSize("20%","20%");
+    menuLayout->setPosition("50% - width/2","40%");
+
+
+    menuGui.add(menuLayout);
     menuGui.add(exitButton);
 
 
@@ -231,16 +261,27 @@ void GUI::run() {
 
             renderWindow->draw(spr);
 
+            sf::VertexArray vertexArray;
 
-            if (audioData.size() >= 2048) {
-                sf::VertexArray vertexArray = dob.getAudioLine(audioData, x, y);
+            switch (visualizerMode) {
+                case VisualizerMode::Double:
+                    vertexArray = dob.getDoubleAudioLine(audioData,x,y);
+                    break;
+                case VisualizerMode::Single:
+                    vertexArray = dob.getSingleAudioLine(audioData,x,y);
+                    break;
+                case VisualizerMode::Circle:
+                    vertexArray = dob.getCircleAudioLine(audioData,x,y);
+                    break;
+            }
+
+            if (audioData.size() >= AudioProcessing::AUDIO_SIZE) {
                 renderWindow->draw(vertexArray);
             }
         } else if (currentState == AppState::Menu) {
             text.setPosition({(x - textPausedBounds.size.x) / 2.f, y / 100.f * 5.f});
             fullscreenButton.setPosition((x - fullscreenButton.getSize().x) / 2.0f, y / 100.f * 25.0f);
-            // topColorListBox->setPosition("50% - width/2", "40%");
-            // topColorListBox->setSize("5%","5%");
+            
 
             menuGui.setWindow(*renderWindow);
             renderWindow->draw(text);

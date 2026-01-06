@@ -24,6 +24,7 @@ public:
 
 private:
     ma_device device  =  {};
+    bool isInitialized = false;
     std::vector<float> audioBuffer;
     std::mutex bufferMutex;
 

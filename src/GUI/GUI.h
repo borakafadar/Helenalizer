@@ -7,6 +7,8 @@
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include "Model3D.h"
+
 enum class AppState {
     Visualizer,
     Menu
@@ -30,6 +32,12 @@ public:
 
 
 private:
+
+    void draw3DScene(float scale);
+
+    Model3D myModel;
+    float modelRotation = 0.0f;
+    float currentScale = 1.0f;
     sf::RenderWindow* renderWindow;
     AppState currentState;
     VisualizerMode visualizerMode;

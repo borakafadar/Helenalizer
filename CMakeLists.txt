@@ -16,12 +16,16 @@ find_package(SFML 3.0.2 COMPONENTS Graphics Audio Window System REQUIRED)
 set(TGUI_DIR "C:/dev/TGUI-1.11/lib/cmake/TGUI")
 find_package(TGUI REQUIRED)
 
+#OpenGL
+find_package(OpenGL REQUIRED)
+
 # Tell CMake to look in the 'src' folder for code
 include_directories(src)
+include_directories(libs)
 
 # Create the executable from main.cpp
 # Make the terminal go away by adding WIN32 before main.cpp
-add_executable(Helenalizer src/main.cpp
+add_executable(Helenalizer WIN32 src/main.cpp
         src/AudioProcessing.cpp
         src/AudioProcessing.h
         src/VisualizerRecorder.cpp
@@ -35,7 +39,16 @@ add_executable(Helenalizer src/main.cpp
         src/GUI/GUI.cpp
         src/GUI/GUI.h
         src/GUI/Button.cpp
-        src/GUI/Button.h)
+        src/GUI/Button.h
+        libs/tiny_gltf_impl.cpp
+        libs/stb_impl.cpp
+        libs/json.hpp
+        libs/stb_image.h
+        libs/stb_image_write.h
+        libs/tiny_gltf.h
+        src/Model3D.cpp
+        src/Model3D.h
+)
 
 # Link the executable to the SFML libraries
 target_link_libraries(Helenalizer
@@ -46,6 +59,7 @@ target_link_libraries(Helenalizer
         SFML::Window
         SFML::System
         pthread
+        opengl32
 )
 
 # Define the path to your SFML bin folder
@@ -65,8 +79,11 @@ add_custom_command(TARGET Helenalizer POST_BUILD
         ${TGUI_BIN_DIR}
         $<TARGET_FILE_DIR:Helenalizer>
 
-        COMMENT "Copying SFML and TGUI DLLs to build directory..."
-)
+        # Copy Assets folder
+        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:Helenalizer>/assets
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/assets
+        $<TARGET_FILE_DIR:Helenalizer>/assets
 
-# Copy the "assets" folder from your Source Code -> Build Folder
-file(COPY ${CMAKE_SOURCE_DIR}/src/assets DESTINATION ${CMAKE_BINARY_DIR})
+        COMMENT "Copying DLLs and assets to build directory..."
+    )

@@ -43,7 +43,7 @@ sf::VertexArray DrawObjects::getSingleAudioLine(std::vector<float> &audio, int w
         return sf::VertexArray(sf::PrimitiveType::LineStrip);
     }
 
-    sf::VertexArray vertex(sf::PrimitiveType::TriangleStrip);
+    sf::VertexArray vertex(sf::PrimitiveType::LineStrip);
 
     float centerY = windowSizeY / 2.0f;
     for (int i = 0; i < audio.size(); i+=2) {

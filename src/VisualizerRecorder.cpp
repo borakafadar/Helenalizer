@@ -6,6 +6,9 @@
 #include <iostream>
 
 VisualizerRecorder::VisualizerRecorder() {
+    // Initialize the flag to false immediately
+    isInitialized = false;
+
     // 1. Configure for WASAPI LOOPBACK (Captures desktop audio)
     ma_device_config config = ma_device_config_init(ma_device_type_loopback);
 
@@ -21,55 +24,68 @@ VisualizerRecorder::VisualizerRecorder() {
     // 4. Initialize the device
     if (ma_device_init(NULL, &config, &device) != MA_SUCCESS) {
         std::cerr << "Failed to initialize loopback device! (Check if a device is active)\n";
+        // Do NOT set isInitialized to true here.
+        // We return early or just let the constructor finish with isInitialized = false.
+        return; 
     }
+
+    // Only set this to true if the above function succeeded
+    isInitialized = true;
 }
 
 VisualizerRecorder::~VisualizerRecorder() {
-    ma_device_stop(&device); // 1. HARD stop audio thread
-    device.pUserData = nullptr; // 2. Make callback harmless
-    ma_device_uninit(&device); // 3. Now safe to destroy
+    // CRITICAL FIX: Only cleanup if we actually initialized successfully
+    if (isInitialized) {
+        ma_device_stop(&device);    // 1. HARD stop audio thread
+        device.pUserData = nullptr; // 2. Make callback harmless
+        ma_device_uninit(&device);  // 3. Now safe to destroy
+    }
 }
 
 void VisualizerRecorder::start() {
+    // CRITICAL FIX: Don't start a broken device
+    if (!isInitialized) {
+        std::cerr << "Cannot start: Audio device not initialized.\n";
+        return;
+    }
+
     if (ma_device_start(&device) != MA_SUCCESS) {
         std::cerr << "Failed to start recording.\n";
     }
 }
 
 void VisualizerRecorder::stop() {
-    ma_device_stop(&device);
+    // CRITICAL FIX: Don't stop a broken device
+    if (isInitialized) {
+        ma_device_stop(&device);
+    }
 }
 
 std::vector<float> VisualizerRecorder::getAudioData() {
+    // Safety check: if not initialized, return empty immediately
+    if (!isInitialized) {
+        return {}; 
+    }
+
     std::lock_guard<std::mutex> lock(bufferMutex);
     return audioBuffer;
 }
 
-// === THE BACKGROUND THREAD WORKER ===
+// ... data_callback remains the same ...
 void VisualizerRecorder::data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount) {
-    // Recover the pointer to our class instance
     VisualizerRecorder *recorder = (VisualizerRecorder *) pDevice->pUserData;
-
-    // Cast raw bytes to float (because we asked for ma_format_f32)
     const float *samples = (const float *) pInput;
 
     if (recorder && samples) {
-        // Lock to prevent Main Loop from reading while we write
         std::lock_guard<std::mutex> lock(recorder->bufferMutex);
 
-        // Process all frames in this chunk
         for (ma_uint32 i = 0; i < frameCount; ++i) {
-            // Stereo split: Left is at index i*2, Right is at i*2+1
             float left = samples[i * 2];
             float right = samples[i * 2 + 1];
-
-            // Mix to Mono
             float sample = (left + right) * 0.5f;
-
             recorder->audioBuffer.push_back(sample);
         }
 
-        // Keep buffer size fixed at 4096 samples (sliding window)
         while (recorder->audioBuffer.size() > 4096) {
             recorder->audioBuffer.erase(recorder->audioBuffer.begin());
         }

@@ -23,6 +23,8 @@ class AudioProcessing {
 
         std::vector<float> getAudioData();
 
+        std::vector<float> getFFTAudioData();
+
     private:
         std::vector<std::string> listeningDevices;
         std::string stereoMixDevice;

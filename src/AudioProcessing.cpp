@@ -28,12 +28,23 @@ std::vector<float> AudioProcessing::getAudioData() {
         audio.resize(AUDIO_SIZE);
         SimpleFFT::applyHannWindow(audio);
 
-        SimpleFFT::computeAmplitudes(audio);
+        //SimpleFFT::computeAmplitudes(audio);
         return audio;
     }
     audio.clear();
     //return empty audio
     return audio;
 
+}
+std::vector<float> AudioProcessing::getFFTAudioData() {
+    std::vector<float> audio = recorder.getAudioData();
+    if (audio.size()>=AUDIO_SIZE) {
+        audio.resize(AUDIO_SIZE);
+        SimpleFFT::applyHannWindow(audio);
+
+        return SimpleFFT::computeAmplitudes(audio);;
+    }
+    audio.clear();
+    return audio;
 }
 

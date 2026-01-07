@@ -19,6 +19,8 @@
 constexpr int DEFAULT_WINDOW_X = 1920;
 constexpr int DEFAULT_WINDOW_Y = 1080;
 
+constexpr float DEFAULT_SCALE = .85f;
+
 
 GUI::GUI() {
     renderWindow = nullptr;
@@ -38,7 +40,7 @@ void GUI::setRenderWindow() {
     if (renderWindow == nullptr) {
         currentState = AppState::Visualizer;
         visualizerMode = VisualizerMode::Double;
-        currentScale = 1.0f;
+        currentScale = DEFAULT_SCALE;
         contextSettings.antiAliasingLevel = 8;
         contextSettings.depthBits = 24;
         renderWindow = new sf::RenderWindow(sf::VideoMode({DEFAULT_WINDOW_X, DEFAULT_WINDOW_Y}), "Helenalizer");
@@ -52,6 +54,11 @@ void GUI::setRenderWindow() {
     }
 }
 
+
+
+sf::RenderWindow &GUI::getRenderWindow() const {
+    return *renderWindow;
+}
 
 void GUI::draw3DScene(float scale) {
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -148,10 +155,6 @@ void GUI::draw3DScene(float scale) {
     glDisable(GL_TEXTURE_2D);          // Turn off texturing completely
 
     renderWindow->popGLStates();
-}
-
-sf::RenderWindow &GUI::getRenderWindow() const {
-    return *renderWindow;
 }
 
 
@@ -289,7 +292,7 @@ void GUI::run() {
     visualizerModeLabel->getRenderer()->setTextColor(sf::Color::White);
     visualizerModeLabel->setTextSize(20);
 
-    std::vector<tgui::String> modes = {"Double", "Single", "Circle"};
+    std::vector<tgui::String> modes = {"Double", "Single", "Circle","Rainbow"};
 
     auto visualizerModeListBox = tgui::ListBox::create();
     visualizerModeListBox->addMultipleItems(modes);
@@ -302,6 +305,8 @@ void GUI::run() {
             visualizerMode = VisualizerMode::Single;
         } else if (item == "Circle") {
             visualizerMode = VisualizerMode::Circle;
+        } else if (item == "Rainbow") {
+            visualizerMode = VisualizerMode::Rainbow;
         }
     });
 
@@ -309,10 +314,10 @@ void GUI::run() {
     visualizerModeLayout->add(visualizerModeListBox);
 
     auto modelCheckBox = tgui::CheckBox::create();
-    modelCheckBox->setChecked(true);
+    modelCheckBox->setChecked(false);
     modelCheckBox->setText("Show model");
     modelCheckBox->getRenderer()->setTextColor(sf::Color::White);
-    bool modelChecked = true;
+    bool modelChecked = false;
     modelCheckBox->onChange([&modelChecked](bool checked) {
         if (checked) {
             modelChecked = true;
@@ -326,7 +331,7 @@ void GUI::run() {
     menuLayout->add(visualizerModeLayout);
     menuLayout->add(modelCheckBox);
 
-    menuLayout->setSize("20%", "20%");
+    menuLayout->setSize("20%", "40%");
     menuLayout->setPosition("50% - width/2", "40%");
 
 
@@ -403,13 +408,16 @@ void GUI::run() {
                 case VisualizerMode::Circle:
                     vertexArray = dob.getCircleAudioLine(audioData, x, y);
                     break;
+                case VisualizerMode::Rainbow:
+                    vertexArray = dob.getSingleRainbowAudioLine(audioData,x,y);
+                    break;
             }
 
             if (audioData.size() >= AudioProcessing::AUDIO_SIZE) {
                 renderWindow->draw(vertexArray);
             }
             if (modelChecked) {
-                float scale = 1.0f;
+                float scale = DEFAULT_SCALE;
 
                 if (!audioData.empty()) {
                     float bassEnergy = 0;
@@ -420,7 +428,7 @@ void GUI::run() {
                     }
                     bassEnergy /= 5;
 
-                    scale = 1.0f + (bassEnergy * 0.4f);
+                    scale = DEFAULT_SCALE + (bassEnergy * 0.4f);
                 }
                 //for animation kinda behaviour
                 currentScale += (scale - currentScale) * 0.1f;

@@ -48,7 +48,11 @@ add_executable(Helenalizer WIN32 src/main.cpp
         libs/tiny_gltf.h
         src/Model3D.cpp
         src/Model3D.h
+        resources.rc
 )
+
+# Force static linking for standard libraries
+target_link_options(Helenalizer PRIVATE -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic)
 
 # Link the executable to the SFML libraries
 target_link_libraries(Helenalizer
@@ -87,3 +91,80 @@ add_custom_command(TARGET Helenalizer POST_BUILD
 
         COMMENT "Copying DLLs and assets to build directory..."
     )
+
+
+# ==========================================
+#      INSTALLER CONFIGURATION (CPACK)
+# ==========================================
+
+# 1. Install the Executable and Assets
+install(TARGETS Helenalizer DESTINATION .)
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/src/assets" DESTINATION .)
+
+# 2. Install SFML DLLs (RELEASE ONLY)
+# We use separate install commands to pick specific files, ignoring the "-d" (debug) ones.
+install(FILES
+        "${SFML_BIN_DIR}/sfml-graphics-3.dll"
+        "${SFML_BIN_DIR}/sfml-window-3.dll"
+        "${SFML_BIN_DIR}/sfml-system-3.dll"
+        "${SFML_BIN_DIR}/sfml-audio-3.dll"
+        DESTINATION .
+)
+
+# 3. Install TGUI DLL (RELEASE ONLY)
+install(FILES
+        "${TGUI_BIN_DIR}/tgui.dll"
+        # Note: We specifically do NOT include 'tgui-d.dll'
+        DESTINATION .
+)
+
+# ==========================================
+#   MANUAL DLL PATH because cmake cannot find the correct dlls for some fucking reason??
+# ==========================================
+
+# 1. Define the EXACT path to your working DLLs
+#    (Make sure this matches your folder structure exactly)
+set(COMPILER_BIN_PATH "C:/msys64/ucrt64/bin")
+
+# 2. Install the DLLs from THAT folder
+install(FILES
+        "${COMPILER_BIN_PATH}/libstdc++-6.dll"
+        "${COMPILER_BIN_PATH}/libgcc_s_seh-1.dll"
+        "${COMPILER_BIN_PATH}/libwinpthread-1.dll"
+        DESTINATION .
+)
+
+# Optional: Sometimes UCRT builds need this extra DLL
+install(FILES "${COMPILER_BIN_PATH}/libwinpthread-1.dll" DESTINATION .)
+
+
+# ==========================================
+#      NSIS SETTINGS
+# ==========================================
+set(CPACK_GENERATOR "NSIS")
+set(CPACK_PACKAGE_NAME "Helenalizer")
+set(CPACK_PACKAGE_VENDOR "Bora Kafadar")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A Stupid Audio Visualizer")
+set(CPACK_PACKAGE_VERSION "0.1.0")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Helenalizer")
+set(CPACK_NSIS_MENU_LINKS "Helenalizer.exe" "Helenalizer")
+
+# Start Menu Shortcut
+set(CPACK_NSIS_MENU_LINKS "Helenalizer.exe" "Helenalizer")
+
+# Desktop Shortcut
+# This command runs automatically during installation to create the icon
+set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+    CreateShortCut \\\"$DESKTOP\\\\Helenalizer.lnk\\\" \\\"$INSTDIR\\\\Helenalizer.exe\\\"
+")
+
+# Clean up the Desktop Shortcut when uninstalling
+set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+    Delete \\\"$DESKTOP\\\\Helenalizer.lnk\\\"
+")
+
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/license.txt")
+
+
+
+include(CPack)

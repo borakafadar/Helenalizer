@@ -17,7 +17,8 @@ enum class AppState {
 enum class VisualizerMode {
     Double,
     Single,
-    Circle
+    Circle,
+    Rainbow
 };
 
 

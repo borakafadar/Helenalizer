@@ -10,7 +10,7 @@
 
 #include "AudioProcessing.h"
 
-const float PI = 3.14159265358979f;
+constexpr float PI = 3.14159265358979f;
 
 sf::VertexArray DrawObjects::getDoubleAudioLine(std::vector<float> &audio, int windowSizeX, int windowSizeY) {
     if (audio.empty()) {
@@ -104,6 +104,32 @@ sf::VertexArray DrawObjects::getCircleAudioLine(std::vector<float> &audio, int w
         point.color = topColor;
 
         vertex.append(point);
+    }
+
+    return vertex;
+}
+
+sf::VertexArray DrawObjects::getSingleRainbowAudioLine(std::vector<float> &audio, int windowSizeX, int windowSizeY) {
+    if (audio.empty()) {
+        return sf::VertexArray(sf::PrimitiveType::LineStrip);
+    }
+
+    sf::VertexArray vertex(sf::PrimitiveType::LineStrip);
+
+    float centerY = windowSizeY / 2.0f;
+    for (int i = 0; i < audio.size(); i+=2) {
+        float x = (static_cast<float>(i) / audio.size()) * static_cast<float>(windowSizeX);
+        float height = audio[i] * 300.0f;
+        sf::Vertex topPoint;
+        float ratio = static_cast<float>(i) / audio.size();
+        auto red   = static_cast<uint8_t>(std::sin(ratio * 2 * PI) * 127 + 128);
+        auto green = static_cast<uint8_t>(std::sin(ratio * 2 * PI + 2) * 127 + 128);
+        auto blue  = static_cast<uint8_t>(std::sin(ratio * 2 * PI + 4) * 127 + 128);
+        sf::Color color = {red,green,blue,255};
+        topPoint.position = sf::Vector2f(x,centerY - height);
+        topPoint.color = color;
+
+        vertex.append(topPoint);
     }
 
     return vertex;
